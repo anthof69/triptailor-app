@@ -87,22 +87,30 @@
 }
 .month-pick:hover { filter: brightness(1.1); }
 .month-pick .caret { font-family: var(--f-sans); font-style: normal; font-size: 0.5em; color: var(--tt-terra); -webkit-text-fill-color: var(--tt-terra); margin-left: 2px; transform: translateY(-2px); }
+@keyframes month-slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.month-pick-wrap { position: relative; display: inline-block; }
+/* Overlay is portaled to <body>, so it escapes ancestor stacking contexts. */
+.month-pop-bg { position: fixed; inset: 0; z-index: 120; }   /* transparent click-catcher (desktop), scrim (mobile) */
 .month-pop {
-  position: absolute; top: calc(100% + 8px); left: 0;
+  position: fixed; top: 0; left: 0;
   background: #1a110d; border: 1px solid var(--tt-rule-strong); border-radius: var(--r-md);
-  padding: 6px; box-shadow: var(--shadow-card);
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
-  min-width: 360px; z-index: 50;
+  padding: 8px; box-shadow: var(--shadow-card);
+  width: 340px; max-width: calc(100vw - 24px); z-index: 121;
   animation: tt-fade-up .18s var(--ease-out) both;
 }
+.month-pop-title { display: none; }
+.month-pop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .month-opt {
-  display: flex; align-items: center; gap: 8px; padding: 9px 12px;
-  border-radius: var(--r-sm); background: transparent; border: 0; color: var(--tt-ink-soft);
-  font-family: var(--f-sans); font-size: 13px; text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 9px 12px;
+  border-radius: var(--r-sm); background: transparent; border: 1px solid transparent; color: var(--tt-ink-soft);
+  font-family: var(--f-sans); font-size: 13.5px; text-align: left; cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
 }
-.month-opt .t-mono { color: var(--tt-ink-mute2); font-size: 10.5px; }
+.month-opt-num { color: var(--tt-ink-mute2); font-size: 9.5px; letter-spacing: 0.1em; }
+.month-opt-name { line-height: 1.1; }
+.month-opt-abbr { display: none; }
 .month-opt:hover { background: rgba(245,237,224,0.06); color: var(--tt-ink); }
-.month-opt.is-on { background: rgba(217,119,87,0.14); color: var(--tt-terra-soft); }
+.month-opt.is-on { background: rgba(217,119,87,0.14); border-color: var(--tt-rule-hot); color: var(--tt-terra-soft); }
 
 .hero-sub { margin: 10px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--tt-ink-muted); max-width: 56ch; }
 .sub-nav-r { display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
@@ -559,6 +567,19 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
   .pays, .pays-body, .pays-main, .cmp, .trip-grid, .trip-list { min-width: 0; max-width: 100%; }
   .chip-row, .filter-l { min-width: 0; }
 
+  /* ── Month picker → bottom sheet on mobile (was a cut-off popover) ── */
+  .month-pop-bg { background: rgba(8,5,3,0.62); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .month-pop {
+    left: 12px; right: 12px; bottom: 76px; top: auto;   /* 76px clears the bottom tab bar */
+    width: auto; max-width: none; padding: 16px 14px 16px;
+    border-radius: var(--r-lg); animation: month-slide-up .26s var(--ease-out) both;
+  }
+  .month-pop-title { display: block; font-family: var(--f-serif); font-style: italic; font-size: 21px; color: var(--tt-ink); margin: 0 2px 12px; }
+  .month-pop-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .month-opt { align-items: center; justify-content: center; padding: 14px 4px; gap: 0; min-height: 52px; }
+  .month-opt-num, .month-opt-name { display: none; }
+  .month-opt-abbr { display: block; font-size: 15px; }
+
   /* ── Global nav ─────────────────────────────────────────── */
   .app-shell { grid-template-rows: 52px 1fr; }
   .g-nav { padding: 0 12px; }
@@ -648,9 +669,9 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
     border-left: 0;
     border-top: 1px solid var(--tt-rule-strong);
     border-radius: var(--r-lg) var(--r-lg) 0 0;
-    animation: cp-slide-up .36s var(--ease-out);
+    animation: cp-sheet-up .36s var(--ease-out);
   }
-  @keyframes cp-slide-up {
+  @keyframes cp-sheet-up {
     from { transform: translateY(40px); opacity: 0; }
     to   { transform: none; opacity: 1; }
   }
