@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { IconClose, IconBookmark, IconCompare, IconArrow } from './icons';
-import { ScoreRing, MiniBars } from './atoms';
+import { ScoreRing, MiniBars, ScoreWhy } from './atoms';
 import { months, monthsFull, type Country } from '../data/countries';
 import { budgetSym, scoreHex, scoreLabel, tagLabel } from '../lib/utils';
 
@@ -45,6 +45,8 @@ export function ClimatePanel({ country, monthIdx, saved, onClose, onAddTrip, onC
           <div className="cp-score-sub">en {monthsFull[monthIdx].toLowerCase()}</div>
         </div>
       </div>
+
+      <div className="cp-why"><ScoreWhy country={country} monthIdx={monthIdx}/></div>
 
       <div className="cp-bars">
         <div className="cp-bars-head">

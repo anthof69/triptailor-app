@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { IconArrow, IconBookmark, IconCompare, IconMap } from '../components/icons';
-import { ScoreRing, MiniBars } from '../components/atoms';
+import { ScoreRing, MiniBars, ScoreWhy } from '../components/atoms';
 import { MonthPicker } from '../components/MonthPicker';
 import { agents as AGENTS, countryByIso, months } from '../data/countries';
 import { budgetEst, budgetSym, photoGrad, scoreHex, scoreLabel, tagLabel } from '../lib/utils';
@@ -82,6 +82,8 @@ export function Pays({ appState, setAppState, addTrip, removeTrip }: PageProps) 
           </div>
 
           <p className="pays-hl"><i>{country.hi}</i></p>
+
+          <ScoreWhy country={country} monthIdx={monthIdx}/>
 
           <div className="pays-bars">
             <div className="cp-bars-head">

@@ -1,5 +1,6 @@
 import { IconGlobe } from './icons';
-import { scoreClass, scoreHex } from '../lib/utils';
+import { scoreClass, scoreHex, scoreFactors, scoreFactorHex, scoreExplain } from '../lib/utils';
+import type { Country } from '../data/countries';
 import { Link } from 'react-router-dom';
 
 export function Logo() {
@@ -34,6 +35,25 @@ export function MiniBars({
         return <rect key={i} x={i*w + 1} y={height - h} width={w - 2} height={h} rx="1.5" fill={color}/>;
       })}
     </svg>
+  );
+}
+
+// "Pourquoi ce score" — factor pills + one-line plain explanation.
+export function ScoreWhy({ country, monthIdx }: { country: Country; monthIdx: number }) {
+  const factors = scoreFactors(country, monthIdx);
+  return (
+    <div className="score-why">
+      <div className="t-eyebrow">Pourquoi ce score</div>
+      <div className="score-why-pills">
+        {factors.map(f => (
+          <span key={f.label} className="score-why-pill" style={{ ['--ft' as any]: scoreFactorHex(f.tone) }}>
+            <i className="score-why-dot"/>
+            <b>{f.label}</b> {f.detail}
+          </span>
+        ))}
+      </div>
+      <p className="score-why-text">{scoreExplain(country, monthIdx)}</p>
+    </div>
   );
 }
 

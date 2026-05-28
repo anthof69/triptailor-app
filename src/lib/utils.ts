@@ -101,3 +101,52 @@ const TEASES: Record<string, string> = {
 export function teaseFor(c: Country, monthIdx: number) {
   return TEASES[c.iso] || `${c.city} en ${monthsFull[monthIdx].toLowerCase()}, comme une évidence.`;
 }
+
+// ── "Pourquoi ce score" — plain-language breakdown of the climate score ──
+export type ScoreTone = 'good' | 'mid' | 'bad';
+export interface ScoreFactor { label: string; detail: string; tone: ScoreTone }
+
+export function scoreFactors(c: Country, m: number): ScoreFactor[] {
+  const factors: ScoreFactor[] = [];
+
+  // Température (jugée sur la max moyenne)
+  const hi = c.tempHi;
+  let tTone: ScoreTone, tDetail: string;
+  if (hi >= 20 && hi <= 28) { tTone = 'good'; tDetail = `${c.tempLo}–${hi}°C, idéal`; }
+  else if (hi >= 15 && hi < 20) { tTone = 'mid'; tDetail = `${c.tempLo}–${hi}°C, frais`; }
+  else if (hi > 28 && hi <= 33) { tTone = 'mid'; tDetail = `${c.tempLo}–${hi}°C, chaud`; }
+  else if (hi > 33) { tTone = 'bad'; tDetail = `${c.tempLo}–${hi}°C, très chaud`; }
+  else { tTone = 'bad'; tDetail = `${c.tempLo}–${hi}°C, froid`; }
+  factors.push({ label: 'Température', detail: tDetail, tone: tTone });
+
+  // Pluie
+  let rTone: ScoreTone, rDetail: string;
+  if (c.rainDays <= 3) { rTone = 'good'; rDetail = `${c.rainDays} j/mois, sec`; }
+  else if (c.rainDays <= 6) { rTone = 'mid'; rDetail = `${c.rainDays} j/mois, quelques averses`; }
+  else { rTone = 'bad'; rDetail = `${c.rainDays} j/mois, humide`; }
+  factors.push({ label: 'Pluie', detail: rDetail, tone: rTone });
+
+  // Saison — ce mois est-il proche du pic annuel du pays ?
+  const peak = Math.max(...c.scores);
+  const gap = peak - c.scores[m];
+  let sTone: ScoreTone, sDetail: string;
+  if (gap <= 5) { sTone = 'good'; sDetail = 'pleine saison'; }
+  else if (gap <= 18) { sTone = 'mid'; sDetail = 'épaule de saison'; }
+  else { sTone = 'bad'; sDetail = 'hors saison'; }
+  factors.push({ label: 'Saison', detail: sDetail, tone: sTone });
+
+  return factors;
+}
+
+export function scoreFactorHex(tone: ScoreTone): string {
+  return tone === 'good' ? '#22b07a' : tone === 'mid' ? '#e7b54b' : '#e08543';
+}
+
+/** One-sentence plain explanation of the month's score. */
+export function scoreExplain(c: Country, m: number): string {
+  const s = c.scores[m];
+  const f = scoreFactors(c, m);
+  const bits = f.map(x => x.detail.replace(/^\d.*?,\s*/, '')); // strip leading numbers for prose
+  const verdict = s >= 80 ? 'une fenêtre idéale' : s >= 65 ? 'une très bonne période' : s >= 50 ? 'une période correcte' : 'une période à éviter';
+  return `Note ${s}/100 — ${verdict} : ${bits.join(', ')}.`;
+}
