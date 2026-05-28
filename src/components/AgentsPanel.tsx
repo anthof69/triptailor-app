@@ -31,9 +31,25 @@ interface FeedItem {
   big?: boolean;
 }
 
+function relTime(t: number, now: number): string {
+  const s = Math.max(0, Math.round((now - t) / 1000));
+  if (s < 5) return "à l'instant";
+  if (s < 60) return `il y a ${s}s`;
+  const m = Math.round(s / 60);
+  return `il y a ${m} min`;
+}
+
 export function AgentsPanel({ country, monthIdx, open, onClose }: Props) {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [pending, setPending] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  // Tick once a second so relative timestamps stay truthful.
+  useEffect(() => {
+    if (!open) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [open]);
 
   useEffect(() => {
     if (!country) { setFeed([]); return; }
@@ -102,7 +118,7 @@ export function AgentsPanel({ country, monthIdx, open, onClose }: Props) {
             <div className="ap-msg-head">
               <span className="ap-avatar" style={{ background: msg.agent.color }}>{msg.agent.icon}</span>
               <span className="ap-name">{msg.agent.name}</span>
-              <span className="t-mono ap-time">il y a {i + 1}s</span>
+              <span className="t-mono ap-time">{relTime(msg.t, now)}</span>
             </div>
             <p className="ap-msg-txt">{msg.text}</p>
           </article>

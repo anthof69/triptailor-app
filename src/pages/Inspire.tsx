@@ -83,7 +83,10 @@ export function Inspire({ appState, setAppState, addTrip }: PageProps) {
         </div>
 
         <div className="quiz-section">
-          <h3>Durée du voyage</h3>
+          <h3>
+            Durée du voyage
+            <span className="soon-tag">bientôt</span>
+          </h3>
           <div className="slider-wrap">
             <div className="slider-head">
               <span className="slider-val">{duration}<sup>jours</sup></span>
@@ -94,19 +97,16 @@ export function Inspire({ appState, setAppState, addTrip }: PageProps) {
             <input className="slider" type="range" min={3} max={21}
                    value={duration} onChange={(e) => setDuration(parseInt(e.target.value, 10))}/>
             <div className="slider-axis"><span>3</span><span>7</span><span>14</span><span>21</span></div>
+            <p className="soon-note">La durée servira bientôt à générer un itinéraire jour&nbsp;par&nbsp;jour. Pour l'instant, le top 5 dépend de vos envies, du budget et du mois.</p>
           </div>
         </div>
 
         <div className="quiz-cta">
           <div className="quiz-summary">
             On cherche <i>{vibes.length ? vibes.map(v => tagLabel(v).toLowerCase()).join(', ') : 'un peu de tout'}</i>{' '}
-            avec un budget <i>{budgetLabel(budget)}</i> pour{' '}
-            <i>{duration} jours en {monthsFull[monthIdx].toLowerCase()}</i>.
+            avec un budget <i>{budgetLabel(budget)}</i> en{' '}
+            <i>{monthsFull[monthIdx].toLowerCase()}</i>.
           </div>
-          <button className="btn btn-primary btn-lg" style={{ justifyContent: 'center' }}>
-            <span style={{ fontFamily: 'var(--f-serif)', fontStyle: 'italic', fontSize: 18 }}>✦</span>
-            Rafraîchir avec l'IA
-          </button>
         </div>
       </aside>
 

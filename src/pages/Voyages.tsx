@@ -51,10 +51,41 @@ function TripCard({ entry, country, onCompare, onRemove }: { entry: TripEntry; c
   );
 }
 
+function TripRow({ entry, country, onCompare, onRemove }: { entry: TripEntry; country: Country; onCompare: (iso: string) => void; onRemove: (iso: string) => void }) {
+  const score = country.scores[entry.month];
+  return (
+    <article className="trip-row">
+      <Link to="/" className="trip-row-photo" style={{ background: photoGrad(country.iso) }} aria-label={`Voir ${country.name}`}>
+        <span className="trip-row-iso">{country.iso}</span>
+      </Link>
+      <div className="trip-row-body">
+        <h3 className="trip-row-name">{country.name} <span className="trip-row-city">· {country.city}</span></h3>
+        <div className="trip-row-meta">
+          <span>partir en <i style={{ color: 'var(--tt-terra-soft)', fontFamily: 'var(--f-serif)' }}>{monthsFull[entry.month]}</i></span>
+          <span><b>{country.tempLo}–{country.tempHi}°C</b></span>
+          <span><b>{budgetSym(country.budget)}</b>/j</span>
+          <span><b>{country.rainDays}j</b> pluie</span>
+        </div>
+      </div>
+      <span className={"trip-row-score score " + scoreClass(score)} style={{ color: scoreHex(score) }}>{score}</span>
+      <div className="trip-row-actions">
+        <button className="icon-btn" title="Comparer" onClick={() => onCompare(country.iso)}><IconCompare/></button>
+        <button className="icon-btn" title="Retirer" onClick={() => onRemove(country.iso)}><IconTrash/></button>
+      </div>
+    </article>
+  );
+}
+
 export function Voyages({ appState, setAppState, removeTrip }: PageProps) {
   const navigate = useNavigate();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = useState<'all' | 'high' | 'winter' | 'summer'>('all');
+  const [sort, setSort] = useState<'recent' | 'score' | 'alpha'>('recent');
+  const [sortOpen, setSortOpen] = useState(false);
+
+  const SORT_LABELS: Record<typeof sort, string> = {
+    recent: 'Récents', score: 'Score', alpha: 'A → Z',
+  };
 
   const trips: TripDisplay[] = useMemo(() => {
     return appState.savedTrips
@@ -66,11 +97,15 @@ export function Voyages({ appState, setAppState, removeTrip }: PageProps) {
   }, [appState.savedTrips]);
 
   const filtered = useMemo(() => {
-    if (filter === 'high')   return trips.filter(t => t.country.scores[t.entry.month] >= 80);
-    if (filter === 'winter') return trips.filter(t => [11, 0, 1].includes(t.entry.month));
-    if (filter === 'summer') return trips.filter(t => [5, 6, 7].includes(t.entry.month));
-    return trips;
-  }, [trips, filter]);
+    let list = trips;
+    if (filter === 'high')   list = trips.filter(t => t.country.scores[t.entry.month] >= 80);
+    if (filter === 'winter') list = trips.filter(t => [11, 0, 1].includes(t.entry.month));
+    if (filter === 'summer') list = trips.filter(t => [5, 6, 7].includes(t.entry.month));
+    // `trips` is already in recent-first order (savedTrips comes back newest-first).
+    if (sort === 'score') return [...list].sort((a, b) => b.country.scores[b.entry.month] - a.country.scores[a.entry.month]);
+    if (sort === 'alpha') return [...list].sort((a, b) => a.country.name.localeCompare(b.country.name, 'fr'));
+    return list;
+  }, [trips, filter, sort]);
 
   const avgScore = trips.length ? Math.round(trips.reduce((a, t) => a + t.country.scores[t.entry.month], 0) / trips.length) : 0;
   const months = new Set(trips.map(t => t.entry.month));
@@ -109,19 +144,32 @@ export function Voyages({ appState, setAppState, removeTrip }: PageProps) {
           <button className={"chip " + (filter === 'summer' ? 'is-on' : '')} onClick={() => setFilter('summer')}>Été</button>
         </div>
         <div className="filter-r">
-          <button className="sort-btn">
-            <span className="t-eyebrow" style={{ textTransform: 'none', letterSpacing: '.05em' }}>Trier :</span>{' '}
-            <b style={{ color: 'var(--tt-ink)' }}>Récents</b> ▾
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button className="sort-btn" onClick={() => setSortOpen(o => !o)} aria-haspopup="listbox" aria-expanded={sortOpen}>
+              <span className="t-eyebrow" style={{ textTransform: 'none', letterSpacing: '.05em' }}>Trier :</span>{' '}
+              <b style={{ color: 'var(--tt-ink)' }}>{SORT_LABELS[sort]}</b> ▾
+            </button>
+            {sortOpen && (
+              <div className="sort-pop" role="listbox" onMouseLeave={() => setSortOpen(false)}>
+                {(['recent', 'score', 'alpha'] as const).map(s => (
+                  <button key={s} role="option" aria-selected={sort === s}
+                          className={"sort-opt " + (sort === s ? 'is-on' : '')}
+                          onClick={() => { setSort(s); setSortOpen(false); }}>
+                    {SORT_LABELS[s]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="view-tog">
-            <button className={view === 'grid' ? 'is-on' : ''} onClick={() => setView('grid')}>▦</button>
-            <button className={view === 'list' ? 'is-on' : ''} onClick={() => setView('list')}>≡</button>
+            <button className={view === 'grid' ? 'is-on' : ''} onClick={() => setView('grid')} aria-label="Vue grille" title="Grille">▦</button>
+            <button className={view === 'list' ? 'is-on' : ''} onClick={() => setView('list')} aria-label="Vue liste" title="Liste">≡</button>
           </div>
         </div>
       </div>
 
-      <div className="trip-grid">
-        {filtered.length === 0 ? (
+      {filtered.length === 0 ? (
+        <div className="trip-grid">
           <div className="empty">
             <div style={{ fontFamily: 'var(--f-serif)', fontStyle: 'italic', fontSize: 64, color: 'var(--tt-terra)', lineHeight: 1 }}>«</div>
             <h2 className="empty-h">Aucun voyage <i style={{ color: 'var(--tt-terra)' }}>pour l'instant.</i></h2>
@@ -131,20 +179,27 @@ export function Voyages({ appState, setAppState, removeTrip }: PageProps) {
               <Link className="btn btn-ghost" to="/inspire">M'inspirer</Link>
             </div>
           </div>
-        ) : (
-          filtered.map(t => (
+        </div>
+      ) : view === 'list' ? (
+        <div className="trip-list">
+          {filtered.map(t => (
+            <TripRow key={t.entry.iso} entry={t.entry} country={t.country}
+                     onCompare={onCompare} onRemove={onRemove}/>
+          ))}
+        </div>
+      ) : (
+        <div className="trip-grid">
+          {filtered.map(t => (
             <TripCard key={t.entry.iso} entry={t.entry} country={t.country}
                       onCompare={onCompare} onRemove={onRemove}/>
-          ))
-        )}
-        {filtered.length > 0 && (
+          ))}
           <Link className="add-card" to="/">
             <span className="add-card-glyph">+</span>
             <span className="add-card-h">Nouvelle idée</span>
             <span style={{ color: 'var(--tt-ink-muted)', fontSize: 12.5, marginTop: -4 }}>Retournez sur la carte ou laissez-vous inspirer</span>
           </Link>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

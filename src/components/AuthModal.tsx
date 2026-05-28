@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { IconClose, IconArrow } from './icons';
+import { countries } from '../data/countries';
+
+const DEST_COUNT = countries.length;
 
 interface Props {
   open: boolean;
@@ -46,7 +49,7 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, error }: Props) {
               : "Créez un compte pour enregistrer vos voyages, comparer plusieurs pays et garder l'historique des analyses IA."}
           </p>
           <ul className="modal-feats">
-            <li><span>—</span>175 destinations notées sur 12 mois</li>
+            <li><span>—</span>{DEST_COUNT} destinations notées sur 12 mois</li>
             <li><span>—</span>4 agents IA : climat, budget, sécurité, planning</li>
             <li><span>—</span>Comparaison côte à côte</li>
           </ul>
