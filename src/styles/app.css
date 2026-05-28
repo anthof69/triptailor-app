@@ -49,6 +49,9 @@
 .user-pill .avatar { width: 28px; height: 28px; font-size: 11px; }
 .user-pill-email { font-size: 12.5px; color: var(--tt-ink-soft); }
 
+/* Desktop : show long signup label, hide short one */
+.g-signup-short { display: none; }
+
 /* ────────────────────────────────────────────────────────────
    EXPLORER · carte + sub-nav + panels
    ──────────────────────────────────────────────────────────── */
@@ -408,3 +411,288 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
 .agent-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
 .cmp-cta-row { display: flex; gap: 8px; }
 .cmp-cta-row .btn { flex: 1; justify-content: center; }
+
+/* Mobile tab bar is hidden by default; mobile media query enables it. */
+.m-tabbar { display: none; }
+
+/* ============================================================
+   MOBILE — single breakpoint at 768px
+   Strategy : keep desktop components, collapse grids to one
+   column, shrink padding/typo, panels become bottom sheets.
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  /* ── Global nav ─────────────────────────────────────────── */
+  .app-shell { grid-template-rows: 52px 1fr; }
+  .g-nav { padding: 0 12px; }
+  .g-nav-l { gap: 12px; }
+  .g-nav-r { gap: 6px; }
+  .g-nav-links { display: none; }                  /* desktop links hidden, replaced by m-tabbar */
+  .tt-logo { font-size: 18px; }
+  .tt-logo svg { width: 18px; height: 18px; }
+  /* Reduce auth buttons to icon-sized affordances on mobile */
+  .g-nav-r .btn-sm:not(.g-agents):not(.btn-primary) { display: none; }   /* hide "Se connecter" */
+  .g-nav-r .btn-primary { padding: 0 12px; font-size: 12px; height: 34px; }
+  .g-signup-long { display: none; }
+  .g-signup-short { display: inline; }
+  .g-agents { padding: 0; width: 36px; gap: 0; justify-content: center; }
+  .g-agents-label { display: none; }                                      /* icon only */
+  .user-pill { padding: 3px 3px 3px 3px; }
+  .user-pill-email { display: none; }              /* avatar only on mobile */
+
+  /* ── Bottom tab bar (real React nav, see Header.tsx) ────── */
+  .app-main { padding-bottom: 60px; }              /* room for bottom bar */
+  .m-tabbar {
+    display: flex;
+    position: fixed; left: 0; right: 0; bottom: 0; height: 60px;
+    background: var(--tt-bg-glass); backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-top: 1px solid var(--tt-rule);
+    align-items: stretch; justify-content: space-around;
+    z-index: 50; padding-bottom: env(safe-area-inset-bottom);
+  }
+  .m-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 8px 4px;
+    background: transparent; border: 0; color: var(--tt-ink-muted);
+    font-family: var(--f-sans); font-size: 10px; letter-spacing: 0.04em;
+    text-decoration: none; cursor: pointer;
+    transition: color .12s;
+  }
+  .m-tab svg { width: 20px; height: 20px; }
+  .m-tab.is-on { color: var(--tt-terra-soft); }
+  .m-tab.is-on::before {
+    content: ""; position: absolute; top: 0; width: 28px; height: 2px;
+    background: var(--tt-terra); border-radius: 0 0 2px 2px;
+  }
+
+  /* ── Explorer hero / sub-nav ────────────────────────────── */
+  .explorer { grid-template-rows: auto 1fr; }
+  .sub-nav {
+    grid-template-columns: 1fr;
+    padding: 14px 16px 12px;
+    gap: 12px;
+  }
+  .hero-h { font-size: 26px; line-height: 1.05; }
+  .hero-sub { font-size: 12.5px; line-height: 1.4; }
+  .month-pop { min-width: 280px; }
+  .sub-nav-r { align-items: stretch; width: 100%; gap: 10px; }
+  .search-wrap { max-width: none; }
+  .search-in { height: 38px; font-size: 13px; }
+  .chip-row {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin: 0 -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .chip-row::-webkit-scrollbar { display: none; }
+  .chip { flex-shrink: 0; }
+
+  /* ── Map controls ───────────────────────────────────────── */
+  .map-legend { left: 12px; bottom: 12px; padding: 8px 10px; }
+  .legend-bar { font-size: 9.5px; gap: 8px; }
+  .map-zoom { right: 12px; bottom: 12px; padding: 4px; }
+  .zbtn { width: 28px; height: 28px; font-size: 14px; }
+
+  /* ── Climate panel : bottom sheet on mobile ─────────────── */
+  .climate-panel {
+    width: 100%;
+    left: 0; right: 0; top: auto;
+    max-height: 78vh;
+    border-left: 0;
+    border-top: 1px solid var(--tt-rule-strong);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    animation: cp-slide-up .36s var(--ease-out);
+  }
+  @keyframes cp-slide-up {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+  }
+  .cp-head { padding: 12px 16px; }
+  .cp-hero { padding: 14px 16px 6px; gap: 12px; }
+  .cp-flag { width: 48px; height: 48px; }
+  .cp-name { font-size: 26px; }
+  .cp-score-block { grid-template-columns: 100px 1fr; padding: 12px 16px; gap: 12px; }
+  .cp-score-headline { font-size: 22px; }
+  .cp-bars, .cp-tags, .cp-hl { padding-left: 16px; padding-right: 16px; }
+  .cp-grid { padding: 0 16px; gap: 6px; }
+  .cp-stat { padding: 10px 12px; }
+  .cp-stat-val { font-size: 19px; }
+  .cp-ctas { padding: 16px; gap: 6px; }
+
+  /* ── Agents panel : also bottom sheet ───────────────────── */
+  .agents-panel {
+    width: 100%;
+    left: 0; right: 0;
+    border-left: 0;
+    border-top: 1px solid var(--tt-rule-strong);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    max-height: 82vh;
+  }
+  .climate-panel ~ .agents-panel { right: 0; }     /* override desktop offset */
+  .ap-head { padding: 12px 16px; }
+  .ap-title { font-size: 19px; }
+  .ap-feed { padding: 14px 16px; }
+  .ap-foot { padding: 12px 16px; }
+
+  /* ── Modal Auth ─────────────────────────────────────────── */
+  .modal {
+    grid-template-columns: 1fr;
+    width: 92vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-l { padding: 22px 22px 14px; gap: 12px; }
+  .modal-h { font-size: 26px; line-height: 1.05; }
+  .modal-feats { font-size: 12px; }
+  .modal-r { padding: 18px 22px 22px; gap: 12px; }
+
+  /* ── Voyages ────────────────────────────────────────────── */
+  .page-head-voyages {
+    grid-template-columns: 1fr;
+    padding: 24px 16px 16px;
+    gap: 18px;
+  }
+  .page-h { font-size: 36px; line-height: 1.02; }
+  .page-r { align-items: flex-start; text-align: left; }
+  .stat-row { gap: 24px; }
+  .stat-num { font-size: 30px; }
+  .stat-lab { font-size: 10px; }
+  .filter {
+    padding: 10px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .filter-l {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    margin: 0 -16px;
+    padding: 0 16px 4px;
+  }
+  .filter-l::-webkit-scrollbar { display: none; }
+  .filter-l > * { flex-shrink: 0; }
+  .filter-r { justify-content: space-between; }
+  .trip-grid {
+    grid-template-columns: 1fr;
+    padding: 14px 16px 32px;
+    gap: 12px;
+  }
+  .trip-name { font-size: 20px; }
+  .trip-hero { aspect-ratio: 16/9; }
+  .trip-score-corner { font-size: 26px; }
+  .add-card { min-height: 180px; padding: 22px; }
+  .add-card-glyph { font-size: 42px; }
+  .add-card-h { font-size: 18px; }
+  .empty { margin: 32px auto; }
+  .empty-h { font-size: 26px; }
+
+  /* ── Inspire-moi : stack quiz above results ─────────────── */
+  .inspire-wrap {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .quiz {
+    padding: 24px 18px 22px;
+    border-right: 0;
+    border-bottom: 1px solid var(--tt-rule);
+    position: static;
+    height: auto;
+    overflow-y: visible;
+    gap: 20px;
+  }
+  .quiz-h { font-size: 30px; }
+  .quiz-sub { font-size: 13px; }
+  .quiz-section h3 { margin-bottom: 8px; }
+  .tag-btn { padding: 10px 12px; font-size: 12.5px; }
+  .results {
+    padding: 24px 16px 40px;
+    gap: 20px;
+  }
+  .results-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-bottom: 14px;
+  }
+  .results-h { font-size: 30px; line-height: 1.05; }
+  .results-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .hero-result {
+    min-height: 320px;
+    padding: 22px;
+  }
+  .hero-rank { font-size: 56px; top: 16px; left: 18px; }
+  .hero-iso { top: 22px; right: 16px; font-size: 10px; }
+  .hero-name { font-size: 32px; line-height: 1; }
+  .hero-city { font-size: 14px; }
+  .hero-tease { font-size: 16px; margin: 10px 0 12px; }
+  .hero-meta { font-size: 10px; gap: 10px; padding: 8px 0; flex-wrap: wrap; }
+  .hero-score-big { font-size: 56px; bottom: 16px; right: 18px; }
+  .hero-cta-row { flex-wrap: wrap; }
+  .side-card { grid-template-columns: 72px 1fr auto; min-height: 88px; }
+  .side-card-name { font-size: 18px; }
+  .side-card-score { padding: 10px 14px; }
+  .side-card-score .v, .side-card-score .score { font-size: 28px; }
+
+  /* ── Comparer : stack as cards instead of table ─────────── */
+  .page-head-cmp {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 16px 16px;
+    gap: 14px;
+  }
+  .verdict { max-width: 100%; }
+  .cmp {
+    grid-template-columns: 1fr;
+    padding: 14px 16px 40px;
+    gap: 0;
+  }
+  /* Section labels become eyebrow headers, cells become full-width cards */
+  .cmp .row-lab {
+    padding: 18px 0 8px;
+    border-bottom: 0;
+  }
+  .cmp .cell {
+    padding: 14px 16px;
+    border-left: 1px solid var(--tt-rule);
+    border-bottom: 1px solid var(--tt-rule);
+    border-radius: var(--r-md);
+    background: rgba(245,237,224,0.02);
+    margin-bottom: 8px;
+  }
+  .cmp .cell.winner {
+    background: linear-gradient(180deg, rgba(34,176,122,0.10), rgba(34,176,122,0.02));
+  }
+  .cmp .hcell {
+    border-left: 1px solid var(--tt-rule);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .cmp-photo { aspect-ratio: 16/9; padding: 14px 16px; }
+  .cmp-name { font-size: 26px; }
+  .cmp-city { font-size: 13px; }
+  .cmp-score { font-size: 42px; }
+  .cmp-metric { font-size: 24px; }
+  .cmp-bars svg { height: 48px; }
+  .add-col { min-height: 140px; padding: 22px; border-radius: var(--r-md); margin-bottom: 8px; }
+  .add-col-gly { font-size: 42px; }
+}
+
+/* Very small phones (≤ 380px) — tighten further */
+@media (max-width: 380px) {
+  .g-nav { padding: 0 10px; }
+  .g-nav-r .btn-sm:not(.g-agents) { display: none; }
+  .g-agents span:last-child { display: none; }     /* icon-only agents button */
+  .hero-h { font-size: 23px; }
+  .page-h { font-size: 30px; }
+  .quiz-h, .results-h { font-size: 26px; }
+}
+

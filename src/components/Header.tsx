@@ -32,8 +32,9 @@ export function Header({ onAgents, onLogin, onLogout, user }: Props) {
         </nav>
       </div>
       <div className="g-nav-r">
-        <button className="btn btn-sm btn-ghost g-agents" onClick={onAgents}>
-          <IconAgents size={14}/> Agents IA
+        <button className="btn btn-sm btn-ghost g-agents" onClick={onAgents} aria-label="Agents IA">
+          <IconAgents size={14}/>
+          <span className="g-agents-label">Agents IA</span>
         </button>
         {user ? (
           <button className="user-pill" title={`Cliquer pour se déconnecter — ${user.email}`} onClick={onLogout}
@@ -44,7 +45,10 @@ export function Header({ onAgents, onLogin, onLogout, user }: Props) {
         ) : (
           <>
             <button className="btn btn-sm btn-ghost" onClick={onLogin}>Se connecter</button>
-            <button className="btn btn-sm btn-primary" onClick={onLogin}>Créer un compte</button>
+            <button className="btn btn-sm btn-primary" onClick={onLogin}>
+              <span className="g-signup-long">Créer un compte</span>
+              <span className="g-signup-short">S'inscrire</span>
+            </button>
           </>
         )}
       </div>

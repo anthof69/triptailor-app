@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
+import { MobileTabBar } from './components/MobileTabBar';
 import { AuthModal } from './components/AuthModal';
 import { Explorer } from './pages/Explorer';
 import { Inspire } from './pages/Inspire';
@@ -91,6 +92,7 @@ export default function App() {
           onSignUp={auth.signUp}
           error={auth.error}
         />
+        <MobileTabBar/>
       </div>
     </BrowserRouter>
   );
