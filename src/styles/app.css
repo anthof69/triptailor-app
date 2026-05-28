@@ -663,9 +663,10 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
 
   /* ── Climate panel : bottom sheet on mobile ─────────────── */
   .climate-panel {
+    position: fixed;                 /* escape .explorer-main overflow:hidden clipping */
     width: 100%;
-    left: 0; right: 0; top: auto;
-    max-height: 78vh;
+    left: 0; right: 0; top: auto; bottom: 0;
+    max-height: 86vh; z-index: 70;   /* above the tab bar */
     border-left: 0;
     border-top: 1px solid var(--tt-rule-strong);
     border-radius: var(--r-lg) var(--r-lg) 0 0;
@@ -690,12 +691,14 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
 
   /* ── Agents panel : also bottom sheet ───────────────────── */
   .agents-panel {
+    position: fixed;                 /* escape clipping, sit above the tab bar */
     width: 100%;
-    left: 0; right: 0;
+    left: 0; right: 0; top: auto; bottom: 0;
     border-left: 0;
     border-top: 1px solid var(--tt-rule-strong);
     border-radius: var(--r-lg) var(--r-lg) 0 0;
-    max-height: 82vh;
+    max-height: 86vh; z-index: 71;
+    animation: cp-sheet-up .36s var(--ease-out);
   }
   .climate-panel ~ .agents-panel { right: 0; }     /* override desktop offset */
   .ap-head { padding: 12px 16px; }
