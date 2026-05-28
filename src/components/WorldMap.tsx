@@ -6,7 +6,6 @@ import { select } from 'd3-selection';
 import { zoom, zoomIdentity } from 'd3-zoom';
 import 'd3-transition';
 import * as topojson from 'topojson-client';
-import worldAtlas from 'world-atlas/countries-110m.json';
 
 import { countries as ALL_COUNTRIES, monthsFull, type Country } from '../data/countries';
 import { scoreHex } from '../lib/utils';
@@ -52,12 +51,18 @@ export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect, co
     return () => { cancelAnimationFrame(rafId); ro.disconnect(); };
   }, []);
 
-  // Convert topojson → geojson once (atlas is bundled, no network call needed)
+  // Convert topojson → geojson once. The ~100KB atlas is code-split into its own
+  // chunk (dynamic import) so it doesn't bloat the initial bundle.
   useEffect(() => {
-    const topo = worldAtlas as any;
-    const fc = topojson.feature(topo, topo.objects.countries) as unknown as FeatureCollection;
-    fc.features = fc.features.filter(f => String(f.id) !== '010'); // drop Antarctica
-    setGeo(fc);
+    let cancelled = false;
+    import('world-atlas/countries-110m.json').then(mod => {
+      if (cancelled) return;
+      const topo = (mod.default ?? mod) as any;
+      const fc = topojson.feature(topo, topo.objects.countries) as unknown as FeatureCollection;
+      fc.features = fc.features.filter(f => String(f.id) !== '010'); // drop Antarctica
+      setGeo(fc);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const projection = useMemo(() => {
@@ -194,14 +199,15 @@ export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect, co
             const isCompare = !!data && compareLookup.has(data.iso);
             const isMatch = !!data && !continentFilter && !queryFilter;
 
-            let fill = '#1a110d';
-            let strokeC = 'rgba(245,237,224,0.06)';
+            // Lighter, warmer land so the map has depth (was near-black #1a110d).
+            let fill = '#2a1c15';
+            let strokeC = 'rgba(245,237,224,0.07)';
             if (data && isMatch) {
               fill = scoreHex(data.scores[monthIdx]);
               strokeC = 'rgba(14,9,7,0.55)';
             } else if (data) {
-              fill = 'rgba(50,35,28,0.55)';
-              strokeC = 'rgba(245,237,224,0.04)';
+              fill = 'rgba(74,52,40,0.6)';
+              strokeC = 'rgba(245,237,224,0.05)';
             }
             const opacity = (continent === 'all' && !q) ? 1 : (isMatch ? 1 : 0.42);
             const stroke = isSel ? '#f5ede0' : isCompare ? '#d97757' : strokeC;

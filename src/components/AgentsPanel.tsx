@@ -59,6 +59,7 @@ export function AgentsPanel({ country, monthIdx, open, onClose }: Props) {
 
   return (
     <aside className="agents-panel" aria-label="Agents IA">
+      <div className="sheet-handle" aria-hidden="true"/>
       <header className="ap-head">
         <div>
           <div className="t-eyebrow">Agents IA</div>

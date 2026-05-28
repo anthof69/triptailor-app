@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IconClose, IconBookmark, IconCompare, IconArrow } from './icons';
 import { ScoreRing, MiniBars, ScoreWhy } from './atoms';
@@ -14,10 +15,29 @@ interface Props {
 }
 
 export function ClimatePanel({ country, monthIdx, saved, onClose, onAddTrip, onCompare }: Props) {
+  const startY = useRef<number | null>(null);
+  const [dragY, setDragY] = useState(0);
+
+  // Swipe-down-to-dismiss on the handle (mobile bottom sheet). Only tracks
+  // downward drags; releasing past 90px closes, otherwise snaps back.
+  const onTouchStart = (e: React.TouchEvent) => { startY.current = e.touches[0].clientY; };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (startY.current === null) return;
+    const dy = e.touches[0].clientY - startY.current;
+    if (dy > 0) setDragY(dy);
+  };
+  const onTouchEnd = () => {
+    if (dragY > 90) onClose();
+    setDragY(0);
+    startY.current = null;
+  };
+
   if (!country) return null;
   const score = country.scores[monthIdx];
   return (
-    <aside className="climate-panel" aria-label={`Détails pour ${country.name}`}>
+    <aside className="climate-panel" aria-label={`Détails pour ${country.name}`}
+           style={dragY ? { transform: `translateY(${dragY}px)`, transition: 'none' } : undefined}>
+      <div className="sheet-handle" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} aria-hidden="true"/>
       <header className="cp-head">
         <button className="cp-close" onClick={onClose} aria-label="Fermer"><IconClose size={18}/></button>
         <div className="t-eyebrow">{monthsFull[monthIdx]} · {country.iso}</div>

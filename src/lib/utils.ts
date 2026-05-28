@@ -40,6 +40,8 @@ export function tagLabel(t: Tag | string) {
 }
 
 // Per-ISO photographic gradient (replace with real photo URLs in prod).
+// Hand-curated palettes for the "hero" destinations; everything else gets a
+// deterministic unique gradient from hashPalette() — so no two cards look alike.
 const PHOTO_PALETTE: Record<string, [string, string, string]> = {
   PT: ['#f6c073', '#c8612a', '#3c1a10'],
   JP: ['#f9d5d5', '#c44b6a', '#2a0e1c'],
@@ -58,24 +60,27 @@ const PHOTO_PALETTE: Record<string, [string, string, string]> = {
   NZ: ['#c4e2c4', '#3f7e5a', '#0d1f15'],
   CR: ['#c4e8d2', '#3f9e5a', '#0d2015'],
   NP: ['#dbe4ec', '#5a7a96', '#0c1822'],
-  KE: ['#ffd07e', '#b54e22', '#241008'],
   PE: ['#ffd29c', '#a8632e', '#1c0f08'],
-  CL: ['#ffd29c', '#b54e22', '#241008'],
   HR: ['#cfe0e6', '#3a86a0', '#0c2030'],
-  EG: ['#ffd07e', '#cf6042', '#260e0a'],
   TR: ['#ffd29c', '#c75a3a', '#2a0f08'],
   KR: ['#f9d5d5', '#c44b6a', '#2a0e1c'],
-  TN: ['#ffd07e', '#cf6042', '#260e0a'],
-  JO: ['#ffd07e', '#cf6042', '#260e0a'],
-  AE: ['#ffd07e', '#cf6042', '#260e0a'],
-  ZA: ['#ffd29c', '#a8632e', '#1c0f08'],
-  AR: ['#ffd29c', '#a8632e', '#1c0f08'],
-  IL: ['#ffd07e', '#cf6042', '#260e0a'],
-  MY: ['#ffd99a', '#d97a32', '#241008'],
-  PH: ['#ffd99a', '#d97a32', '#241008'],
 };
+// Deterministic warm-toned palette derived from the ISO code, so every country
+// without a hand-curated palette still gets a distinct gradient (no twins).
+function hashPalette(iso: string): [string, string, string] {
+  let h = 0;
+  for (let i = 0; i < iso.length; i++) h = (h * 31 + iso.charCodeAt(i)) >>> 0;
+  const hue = h % 360;                 // full wheel, but…
+  // …pull toward the Magic Hour warm/earth range (terracotta→amber→teal-green)
+  const warmHue = [18, 28, 36, 44, 8, 158, 192][h % 7];
+  const hi = `hsl(${warmHue}, ${62 + (h % 18)}%, ${64 + (hue % 10)}%)`;
+  const mid = `hsl(${warmHue}, ${58 + (h % 16)}%, ${42 + (h % 8)}%)`;
+  const lo = `hsl(${(warmHue + 8) % 360}, 45%, ${9 + (h % 6)}%)`;
+  return [hi, mid, lo];
+}
+
 export function photoGrad(iso: string) {
-  const [a, b, c] = PHOTO_PALETTE[iso] || ['#d97757', '#a84e2f', '#0e0907'];
+  const [a, b, c] = PHOTO_PALETTE[iso] || hashPalette(iso);
   return `radial-gradient(ellipse at 30% 30%, ${a} 0%, transparent 45%), `
        + `radial-gradient(ellipse at 75% 60%, ${b} 0%, transparent 50%), `
        + `linear-gradient(180deg, ${b} 0%, ${c} 100%)`;
