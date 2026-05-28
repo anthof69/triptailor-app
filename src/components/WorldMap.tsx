@@ -18,6 +18,7 @@ interface Props {
   query: string;
   selectedIso: string | null;
   onSelect: (iso: string) => void;
+  compareSet?: string[];
 }
 
 type GeoFeature = { id?: string | number; type: 'Feature'; geometry: any; properties: any };
@@ -26,7 +27,8 @@ interface FeatureCollection {
   features: GeoFeature[];
 }
 
-export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect }: Props) {
+export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect, compareSet = [] }: Props) {
+  const compareLookup = useMemo(() => new Set(compareSet), [compareSet]);
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const zoomRef = useRef<ReturnType<typeof zoom<SVGSVGElement, unknown>> | null>(null);
@@ -188,6 +190,7 @@ export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect }: 
             const q = (query || '').toLowerCase().trim();
             const queryFilter = q && data && !data.name.toLowerCase().includes(q) && !data.city.toLowerCase().includes(q);
             const isSel = !!data && selectedIso === data.iso;
+            const isCompare = !!data && compareLookup.has(data.iso);
             const isMatch = !!data && !continentFilter && !queryFilter;
 
             let fill = '#1a110d';
@@ -200,14 +203,16 @@ export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect }: 
               strokeC = 'rgba(245,237,224,0.04)';
             }
             const opacity = (continent === 'all' && !q) ? 1 : (isMatch ? 1 : 0.42);
+            const stroke = isSel ? '#f5ede0' : isCompare ? '#d97757' : strokeC;
+            const sw = (isCompare ? 2.2 : isSel ? 1.6 : 0.6) / transform.k;
             return (
               <path
                 key={f.id ?? `f-${fi}`}
                 d={pathFn(f as any) || undefined}
                 fill={fill} fillOpacity={opacity}
-                stroke={isSel ? '#f5ede0' : strokeC}
-                strokeWidth={(isSel ? 1.6 : 0.6) / transform.k}
-                className={isSel ? 'country is-sel' : 'country'}
+                stroke={stroke}
+                strokeWidth={sw}
+                className={isSel ? 'country is-sel' : isCompare ? 'country is-cmp' : 'country'}
                 onMouseEnter={(e) => handleEnter(f, e)}
                 onMouseMove={handleMove}
                 onMouseLeave={handleLeave}

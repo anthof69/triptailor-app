@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { IconSearch, IconClose } from '../components/icons';
+import { IconSearch, IconClose, IconCompare } from '../components/icons';
 import { WorldMap } from '../components/WorldMap';
 import { ClimatePanel } from '../components/ClimatePanel';
 import { AgentsPanel } from '../components/AgentsPanel';
@@ -90,9 +90,11 @@ interface SubNavProps {
   setQuery: (q: string) => void;
   totalCount: number;
   onPick: (iso: string) => void;
+  compareMode: boolean;
+  onToggleCompareMode: () => void;
 }
 
-function SubNav({ monthIdx, setMonthIdx, continent, setContinent, query, setQuery, totalCount, onPick }: SubNavProps) {
+function SubNav({ monthIdx, setMonthIdx, continent, setContinent, query, setQuery, totalCount, onPick, compareMode, onToggleCompareMode }: SubNavProps) {
   return (
     <section className="sub-nav">
       <div className="sub-nav-l">
@@ -107,7 +109,13 @@ function SubNav({ monthIdx, setMonthIdx, continent, setContinent, query, setQuer
         </p>
       </div>
       <div className="sub-nav-r">
-        <SearchBox monthIdx={monthIdx} query={query} setQuery={setQuery} onPick={onPick}/>
+        <div className="sub-nav-search-row">
+          <SearchBox monthIdx={monthIdx} query={query} setQuery={setQuery} onPick={onPick}/>
+          <button className={"chip cmp-toggle " + (compareMode ? 'is-on' : '')}
+                  onClick={onToggleCompareMode} aria-pressed={compareMode}>
+            <IconCompare size={14}/> Comparer
+          </button>
+        </div>
         <div className="chip-row">
           {continents.map(c => (
             <button key={c.id}
@@ -130,6 +138,7 @@ export function Explorer({ appState, setAppState, addTrip }: PageProps) {
   const [continent, setContinent] = useState('all');
   const [query, setQuery] = useState('');
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => { setAppState(s => ({ ...s, monthIdx })); }, [monthIdx, setAppState]);
 
@@ -153,6 +162,20 @@ export function Explorer({ appState, setAppState, addTrip }: PageProps) {
     navigate('/comparer');
   };
 
+  const picks = appState.comparePicks;
+  const toggleCompare = (iso: string) => {
+    setAppState(s => {
+      const has = s.comparePicks.includes(iso);
+      if (has) return { ...s, comparePicks: s.comparePicks.filter(x => x !== iso) };
+      if (s.comparePicks.length >= 3) return s;            // cap at 3
+      return { ...s, comparePicks: [...s.comparePicks, iso] };
+    });
+  };
+  const onMapSelect = (iso: string) => {
+    if (compareMode) toggleCompare(iso);
+    else setSelectedIso(iso);
+  };
+
   return (
     <div className="explorer">
       <SubNav
@@ -161,15 +184,43 @@ export function Explorer({ appState, setAppState, addTrip }: PageProps) {
         query={query} setQuery={setQuery}
         totalCount={ALL.length}
         onPick={onPick}
+        compareMode={compareMode}
+        onToggleCompareMode={() => { setCompareMode(m => !m); setSelectedIso(null); }}
       />
       <main className="explorer-main">
         <WorldMap
           monthIdx={monthIdx}
           continent={continent}
           query={query}
-          selectedIso={selectedIso}
-          onSelect={setSelectedIso}
+          selectedIso={compareMode ? null : selectedIso}
+          onSelect={onMapSelect}
+          compareSet={compareMode ? picks : []}
         />
+
+        {compareMode && (
+          <div className="cmp-tray" role="region" aria-label="Sélection à comparer">
+            <div className="cmp-tray-head">
+              <span className="t-eyebrow">Comparer — touchez 2 ou 3 pays</span>
+              <button className="cmp-tray-x" onClick={() => setCompareMode(false)} aria-label="Quitter le mode comparaison">Terminé</button>
+            </div>
+            <div className="cmp-tray-items">
+              {picks.length === 0 && <span className="cmp-tray-empty">Aucun pays sélectionné</span>}
+              {picks.map(iso => {
+                const c = ALL.find(x => x.iso === iso)!;
+                return (
+                  <button key={iso} className="cmp-tray-chip" onClick={() => toggleCompare(iso)} title={`Retirer ${c.name}`}>
+                    {c.name} <span aria-hidden>×</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button className="btn btn-primary cmp-tray-go" disabled={picks.length < 2}
+                    onClick={() => navigate('/comparer')}>
+              Comparer {picks.length >= 2 ? `(${picks.length})` : ''}
+            </button>
+          </div>
+        )}
+
         <ClimatePanel
           country={selected}
           monthIdx={monthIdx}
