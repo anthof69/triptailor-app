@@ -547,6 +547,18 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
 
 @media (max-width: 768px) {
 
+  /* ── Horizontal-overflow guard ──────────────────────────────
+     Scrollable nowrap rows (chips, filters) must be allowed to shrink
+     (min-width:0) or they inflate every ancestor instead of scrolling.
+     Belt-and-suspenders: clip any residual overflow at the shell. */
+  html, body, #root { overflow-x: hidden; max-width: 100%; }
+  .app-shell, .app-main, .explorer, .sub-nav,
+  .sub-nav-l, .sub-nav-r, .sub-nav-search-row,
+  .inspire-wrap, .quiz, .results, .results-grid,
+  .page-head-voyages, .page-head-cmp, .filter,
+  .pays, .pays-body, .pays-main, .cmp, .trip-grid, .trip-list { min-width: 0; max-width: 100%; }
+  .chip-row, .filter-l { min-width: 0; }
+
   /* ── Global nav ─────────────────────────────────────────── */
   .app-shell { grid-template-rows: 52px 1fr; }
   .g-nav { padding: 0 12px; }
@@ -646,7 +658,8 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
   .cp-hero { padding: 14px 16px 6px; gap: 12px; }
   .cp-flag { width: 48px; height: 48px; }
   .cp-name { font-size: 26px; }
-  .cp-score-block { grid-template-columns: 100px 1fr; padding: 12px 16px; gap: 12px; }
+  .cp-score-block { grid-template-columns: 132px 1fr; padding: 12px 16px; gap: 14px; align-items: center; }
+  .cp-score-block .score-ring { justify-self: center; }
   .cp-score-headline { font-size: 22px; }
   .cp-bars, .cp-tags, .cp-hl { padding-left: 16px; padding-right: 16px; }
   .cp-grid { padding: 0 16px; gap: 6px; }
@@ -769,7 +782,11 @@ input[type=range].slider::-moz-range-thumb { width: 20px; height: 20px; border-r
   .hero-city { font-size: 14px; }
   .hero-tease { font-size: 16px; margin: 10px 0 12px; }
   .hero-meta { font-size: 10px; gap: 10px; padding: 8px 0; flex-wrap: wrap; }
-  .hero-score-big { font-size: 56px; bottom: 16px; right: 18px; }
+  /* Move the big score below the ISO badge (top-right) so it can't collide
+     with the CTA row at the bottom of the card */
+  .hero-iso { top: 14px; right: 16px; }
+  .hero-score-big { font-size: 46px; top: 44px; right: 16px; bottom: auto; }
+  .hero-rank { font-size: 48px; }
   .hero-cta-row { flex-wrap: wrap; }
   .side-card { grid-template-columns: 72px 1fr auto; min-height: 88px; }
   .side-card-name { font-size: 18px; }
