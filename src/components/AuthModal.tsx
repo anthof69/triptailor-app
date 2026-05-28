@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IconClose, IconArrow } from './icons';
 import { countries } from '../data/countries';
+import type { AuthResult } from '../lib/useAuth';
 
 const DEST_COUNT = countries.length;
-
-import type { AuthResult } from '../lib/useAuth';
 
 interface Props {
   open: boolean;
@@ -21,6 +20,29 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, error }: Props) {
   const [firstName, setFirstName] = useState('');
   const [pending, setPending] = useState(false);
   const [confirmSent, setConfirmSent] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Focus management: focus first field on open, Escape to close, trap Tab.
+  useEffect(() => {
+    if (!open) return;
+    const root = modalRef.current;
+    const first = root?.querySelector<HTMLElement>('input') ?? root?.querySelector<HTMLElement>('button');
+    first?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'Tab' || !root) return;
+      const focusables = Array.from(root.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(el => el.offsetParent !== null);
+      if (focusables.length === 0) return;
+      const firstEl = focusables[0], lastEl = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, mode, confirmSent, onClose]);
 
   if (!open) return null;
 
@@ -46,8 +68,8 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, error }: Props) {
   const switchMode = (m: 'login' | 'signup') => { setMode(m); setConfirmSent(false); };
 
   return (
-    <div className="modal-bg" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal" onClick={e => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose} role="dialog" aria-modal="true" aria-label="Connexion à TripTailor">
+      <div className="modal" ref={modalRef} onClick={e => e.stopPropagation()}>
         <button className="cp-close modal-x" onClick={onClose} aria-label="Fermer"><IconClose size={18}/></button>
 
         <div className="modal-l">

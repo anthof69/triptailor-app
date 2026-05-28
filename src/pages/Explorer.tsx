@@ -50,6 +50,7 @@ function SearchBox({ monthIdx, query, setQuery, onPick }: {
       <input
         className="search-in" placeholder="Lisbonne, Bali, Patagonie…"
         value={query}
+        aria-label="Rechercher une destination"
         role="combobox" aria-expanded={open && matches.length > 0} aria-controls="search-listbox" aria-autocomplete="list"
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}

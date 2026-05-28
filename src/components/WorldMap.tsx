@@ -173,7 +173,8 @@ export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect, co
 
   return (
     <div className="map-wrap" ref={wrapRef}>
-      <svg ref={svgRef} className="world-svg" viewBox={`0 0 ${dims.w} ${dims.h}`} preserveAspectRatio="xMidYMid meet">
+      <svg ref={svgRef} className="world-svg" viewBox={`0 0 ${dims.w} ${dims.h}`} preserveAspectRatio="xMidYMid meet"
+           role="img" aria-label="Carte du monde — pays colorés selon leur score climatique du mois. Utilisez la recherche pour ouvrir une destination au clavier.">
         <defs>
           <radialGradient id="oceanGlow" cx="50%" cy="40%" r="65%">
             <stop offset="0%" stopColor="#1c130f" stopOpacity="0.55"/>
