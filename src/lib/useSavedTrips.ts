@@ -36,6 +36,18 @@ export function useSavedTrips(user: SessionUser | null) {
     (async () => {
       setLoading(true);
       if (supabase && user) {
+        // One-shot migration: push any trips saved while logged out into the
+        // user's account, then clear the local cache so nothing is lost.
+        const local = readLocal();
+        if (local.length > 0) {
+          const rows = local.map(t => ({ user_id: user.id, iso: t.iso, month: t.month, added_at: t.addedAt }));
+          const { error: migErr } = await supabase
+            .from('saved_trips')
+            .upsert(rows, { onConflict: 'user_id,iso' });
+          if (migErr) console.error('saved_trips migration failed', migErr);
+          else localStorage.removeItem(LS_KEY);
+        }
+
         const { data, error } = await supabase
           .from('saved_trips')
           .select('iso, month, added_at')

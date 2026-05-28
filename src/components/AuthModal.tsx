@@ -4,11 +4,13 @@ import { countries } from '../data/countries';
 
 const DEST_COUNT = countries.length;
 
+import type { AuthResult } from '../lib/useAuth';
+
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSignIn: (email: string, password: string) => Promise<void>;
-  onSignUp: (email: string, password: string, firstName: string) => Promise<void>;
+  onSignIn: (email: string, password: string) => Promise<AuthResult>;
+  onSignUp: (email: string, password: string, firstName: string) => Promise<AuthResult>;
   error: string | null;
 }
 
@@ -18,6 +20,7 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, error }: Props) {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [pending, setPending] = useState(false);
+  const [confirmSent, setConfirmSent] = useState(false);
 
   if (!open) return null;
 
@@ -25,13 +28,22 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, error }: Props) {
     e.preventDefault();
     setPending(true);
     try {
-      if (mode === 'login') await onSignIn(email, password);
-      else                  await onSignUp(email, password, firstName);
-      if (!error) onClose();
+      // Use the returned result — not the closure `error` (which is stale until next render).
+      const res = mode === 'login'
+        ? await onSignIn(email, password)
+        : await onSignUp(email, password, firstName);
+      if (res.ok && res.needsEmailConfirm) {
+        setConfirmSent(true);        // show "check your mail", keep modal open
+      } else if (res.ok) {
+        onClose();                   // logged in
+      }
+      // res.ok === false → leave modal open; `error` prop renders the message
     } finally {
       setPending(false);
     }
   };
+
+  const switchMode = (m: 'login' | 'signup') => { setMode(m); setConfirmSent(false); };
 
   return (
     <div className="modal-bg" onClick={onClose} role="dialog" aria-modal="true">
@@ -56,36 +68,52 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, error }: Props) {
         </div>
 
         <div className="modal-r">
-          <div className="modal-tabs">
-            <button className={mode === 'login' ? 'is-on' : ''} onClick={() => setMode('login')}>Se connecter</button>
-            <button className={mode === 'signup' ? 'is-on' : ''} onClick={() => setMode('signup')}>Créer un compte</button>
-          </div>
-          <form className="modal-form" onSubmit={submit}>
-            {mode === 'signup' && (
-              <label className="modal-label">
-                <span className="t-eyebrow">Prénom</span>
-                <input className="input" placeholder="Camille" type="text" value={firstName} onChange={e => setFirstName(e.target.value)}/>
-              </label>
-            )}
-            <label className="modal-label">
-              <span className="t-eyebrow">Email</span>
-              <input className="input" placeholder="vous@email.com" type="email" value={email} onChange={e => setEmail(e.target.value)} required/>
-            </label>
-            <label className="modal-label">
-              <span className="t-eyebrow">Mot de passe</span>
-              <input className="input" placeholder="••••••••" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6}/>
-            </label>
-            {error && (
-              <div style={{ color: 'var(--tt-terra-soft)', fontSize: 12.5, padding: '6px 10px', background: 'rgba(217,119,87,0.08)', borderRadius: 8, border: '1px solid rgba(217,119,87,0.25)' }}>{error}</div>
-            )}
-            <button type="submit" className="btn btn-primary btn-lg modal-cta" disabled={pending}>
-              {pending ? '…' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'} <IconArrow/>
-            </button>
-            <button type="button" className="modal-alt" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
-              {mode === 'login' ? "Pas encore de compte ? Créez-en un" : "J'ai déjà un compte"}
-            </button>
-            <div className="modal-fine">Pas de pub. Pas de revente de données. Voyagez tranquille.</div>
-          </form>
+          {confirmSent ? (
+            <div className="modal-confirm">
+              <div className="modal-confirm-glyph">✦</div>
+              <h3 className="modal-confirm-h"><i>Vérifiez vos mails.</i></h3>
+              <p className="modal-confirm-p">
+                On vient d'envoyer un lien de confirmation à <b>{email}</b>.
+                Cliquez-le pour activer votre compte, puis revenez vous connecter.
+              </p>
+              <button type="button" className="btn btn-ghost" onClick={() => switchMode('login')}>
+                Retour à la connexion
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="modal-tabs">
+                <button className={mode === 'login' ? 'is-on' : ''} onClick={() => switchMode('login')}>Se connecter</button>
+                <button className={mode === 'signup' ? 'is-on' : ''} onClick={() => switchMode('signup')}>Créer un compte</button>
+              </div>
+              <form className="modal-form" onSubmit={submit}>
+                {mode === 'signup' && (
+                  <label className="modal-label">
+                    <span className="t-eyebrow">Prénom</span>
+                    <input className="input" placeholder="Camille" type="text" value={firstName} onChange={e => setFirstName(e.target.value)}/>
+                  </label>
+                )}
+                <label className="modal-label">
+                  <span className="t-eyebrow">Email</span>
+                  <input className="input" placeholder="vous@email.com" type="email" value={email} onChange={e => setEmail(e.target.value)} required/>
+                </label>
+                <label className="modal-label">
+                  <span className="t-eyebrow">Mot de passe</span>
+                  <input className="input" placeholder="••••••••" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6}/>
+                </label>
+                {error && (
+                  <div role="alert" style={{ color: 'var(--tt-terra-soft)', fontSize: 12.5, padding: '6px 10px', background: 'rgba(217,119,87,0.08)', borderRadius: 8, border: '1px solid rgba(217,119,87,0.25)' }}>{error}</div>
+                )}
+                <button type="submit" className="btn btn-primary btn-lg modal-cta" disabled={pending}>
+                  {pending ? '…' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'} <IconArrow/>
+                </button>
+                <button type="button" className="modal-alt" onClick={() => switchMode(mode === 'login' ? 'signup' : 'login')}>
+                  {mode === 'login' ? "Pas encore de compte ? Créez-en un" : "J'ai déjà un compte"}
+                </button>
+                <div className="modal-fine">Pas de pub. Pas de revente de données. Voyagez tranquille.</div>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>

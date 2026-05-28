@@ -10,6 +10,22 @@ export interface SessionUser {
   initials: string;
 }
 
+export type AuthResult =
+  | { ok: true; needsEmailConfirm?: boolean }
+  | { ok: false; error: string };
+
+// Map common Supabase / network errors to readable French.
+function frError(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('failed to fetch') || m.includes('network')) return 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+  if (m.includes('invalid login credentials')) return 'Email ou mot de passe incorrect.';
+  if (m.includes('email not confirmed')) return 'Confirmez votre email avant de vous connecter (vérifiez vos mails).';
+  if (m.includes('user already registered') || m.includes('already been registered')) return 'Un compte existe déjà avec cet email. Connectez-vous.';
+  if (m.includes('password should be at least')) return 'Mot de passe trop court (6 caractères minimum).';
+  if (m.includes('rate limit') || m.includes('too many')) return 'Trop de tentatives. Patientez une minute.';
+  return msg;
+}
+
 function initialsOf(email: string, firstName?: string): string {
   if (firstName) return firstName.trim().slice(0, 2).toUpperCase();
   const [name] = email.split('@');
@@ -50,31 +66,35 @@ export function useAuth() {
     return () => { cancelled = true; };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     setError(null);
     if (!supabase) {
       const u = { id: 'local-' + email, email, initials: initialsOf(email) };
       setUser(u);
       localStorage.setItem('tt:user', JSON.stringify(u));
-      return;
+      return { ok: true };
     }
     const { error: e } = await supabase.auth.signInWithPassword({ email, password });
-    if (e) setError(e.message);
+    if (e) { const fe = frError(e.message); setError(fe); return { ok: false, error: fe }; }
+    return { ok: true };
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, firstName: string) => {
+  const signUp = useCallback(async (email: string, password: string, firstName: string): Promise<AuthResult> => {
     setError(null);
     if (!supabase) {
       const u = { id: 'local-' + email, email, initials: initialsOf(email, firstName) };
       setUser(u);
       localStorage.setItem('tt:user', JSON.stringify(u));
-      return;
+      return { ok: true };
     }
-    const { error: e } = await supabase.auth.signUp({
+    const { data, error: e } = await supabase.auth.signUp({
       email, password,
       options: { data: { first_name: firstName } },
     });
-    if (e) setError(e.message);
+    if (e) { const fe = frError(e.message); setError(fe); return { ok: false, error: fe }; }
+    // When email confirmation is ON, Supabase returns a user but no active session.
+    const needsEmailConfirm = !data.session && !!data.user;
+    return { ok: true, needsEmailConfirm };
   }, []);
 
   const signOut = useCallback(async () => {
