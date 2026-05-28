@@ -1,6 +1,6 @@
 /* Interactive world map: d3-geo Equal-Earth projection + topojson world atlas. */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { geoEqualEarth, geoPath, geoGraticule } from 'd3-geo';
 import { select } from 'd3-selection';
 import { zoom, zoomIdentity } from 'd3-zoom';
@@ -20,14 +20,16 @@ interface Props {
   onSelect: (iso: string) => void;
 }
 
+type GeoFeature = { id?: string | number; type: 'Feature'; geometry: any; properties: any };
 interface FeatureCollection {
   type: 'FeatureCollection';
-  features: Array<{ id?: string | number; type: 'Feature'; geometry: any; properties: any }>;
+  features: GeoFeature[];
 }
 
 export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const zoomRef = useRef<ReturnType<typeof zoom<SVGSVGElement, unknown>> | null>(null);
   const [geo, setGeo] = useState<FeatureCollection | null>(null);
   const [hover, setHover] = useState<{ iso: string; name: string; city: string; score: number; x: number; y: number } | null>(null);
   const [dims, setDims] = useState({ w: 1200, h: 600 });
@@ -69,20 +71,76 @@ export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect }: 
     return m;
   }, []);
 
-  // d3-zoom pan/zoom
+  // ISO-2 → atlas feature, for fly-to lookups.
+  const featureByIso = useMemo(() => {
+    const m = new Map<string, GeoFeature>();
+    if (!geo) return m;
+    for (const f of geo.features) {
+      const data = dataByNumeric.get(String(f.id).padStart(3, '0'));
+      if (data) m.set(data.iso, f);
+    }
+    return m;
+  }, [geo, dataByNumeric]);
+
+  // d3-zoom pan/zoom — behavior stored in a ref so buttons + fly-to reuse it.
   useEffect(() => {
     if (!svgRef.current) return;
     const sv = select(svgRef.current);
     const z = zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 8])
+      .scaleExtent([1, 12])
       .translateExtent([[-200, -100], [dims.w + 200, dims.h + 100]])
       .on('zoom', (ev) => {
         const { x, y, k } = ev.transform;
         setTransform({ x, y, k });
       });
+    zoomRef.current = z;
     sv.call(z);
     return () => { sv.on('.zoom', null); };
   }, [dims.w, dims.h]);
+
+  // Fit the viewport to a set of features (animated). Used by select + continent focus.
+  const flyToFeatures = useCallback((features: GeoFeature[], maxK = 8, dur = 720) => {
+    if (!pathFn || !svgRef.current || !zoomRef.current || features.length === 0) return;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const f of features) {
+      const b = pathFn.bounds(f as any);
+      x0 = Math.min(x0, b[0][0]); y0 = Math.min(y0, b[0][1]);
+      x1 = Math.max(x1, b[1][0]); y1 = Math.max(y1, b[1][1]);
+    }
+    if (!isFinite(x0)) return;
+    const dx = x1 - x0, dy = y1 - y0;
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const k = Math.max(1, Math.min(maxK, 0.55 / Math.max(dx / dims.w, dy / dims.h)));
+    const tx = dims.w / 2 - k * cx;
+    const ty = dims.h / 2 - k * cy;
+    select(svgRef.current).transition().duration(dur)
+      .call(zoomRef.current.transform as any, zoomIdentity.translate(tx, ty).scale(k));
+  }, [pathFn, dims.w, dims.h]);
+
+  const resetZoom = useCallback((dur = 600) => {
+    if (!svgRef.current || !zoomRef.current) return;
+    select(svgRef.current).transition().duration(dur)
+      .call(zoomRef.current.transform as any, zoomIdentity);
+  }, []);
+
+  // Fly to the selected country (also makes small countries tappable — issue #22).
+  useEffect(() => {
+    if (!selectedIso) return;
+    const f = featureByIso.get(selectedIso);
+    if (f) flyToFeatures([f], 6);
+  }, [selectedIso, featureByIso, flyToFeatures]);
+
+  // Fly to a continent when its chip is chosen; reset when back to "all".
+  useEffect(() => {
+    if (selectedIso) return; // don't fight an active selection
+    if (continent === 'all') { resetZoom(); return; }
+    const feats: GeoFeature[] = [];
+    if (geo) for (const f of geo.features) {
+      const data = dataByNumeric.get(String(f.id).padStart(3, '0'));
+      if (data && data.cont === continent) feats.push(f);
+    }
+    flyToFeatures(feats, 5);
+  }, [continent, geo, dataByNumeric, flyToFeatures, resetZoom, selectedIso]);
 
   const handleEnter = (f: any, e: React.MouseEvent) => {
     const data = dataByNumeric.get(String(f.id).padStart(3, '0'));
@@ -183,9 +241,9 @@ export function WorldMap({ monthIdx, continent, query, selectedIso, onSelect }: 
       </div>
 
       <div className="map-zoom">
-        <button className="zbtn" onClick={() => svgRef.current && select(svgRef.current).transition().duration(280).call(zoom<SVGSVGElement, unknown>().scaleBy as any, 1.5)}>+</button>
-        <button className="zbtn" onClick={() => svgRef.current && select(svgRef.current).transition().duration(280).call(zoom<SVGSVGElement, unknown>().scaleBy as any, 0.67)}>−</button>
-        <button className="zbtn" onClick={() => svgRef.current && select(svgRef.current).transition().duration(380).call(zoom<SVGSVGElement, unknown>().transform as any, zoomIdentity)}>⊙</button>
+        <button className="zbtn" aria-label="Zoomer" onClick={() => svgRef.current && zoomRef.current && select(svgRef.current).transition().duration(280).call(zoomRef.current.scaleBy as any, 1.5)}>+</button>
+        <button className="zbtn" aria-label="Dézoomer" onClick={() => svgRef.current && zoomRef.current && select(svgRef.current).transition().duration(280).call(zoomRef.current.scaleBy as any, 0.67)}>−</button>
+        <button className="zbtn" aria-label="Réinitialiser la vue" onClick={() => resetZoom(380)}>⊙</button>
       </div>
     </div>
   );

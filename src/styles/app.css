@@ -119,6 +119,13 @@
 .search-ic { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--tt-ink-muted); pointer-events: none; }
 .search-x { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; color: var(--tt-ink-muted); padding: 8px; cursor: pointer; border-radius: 50%; }
 .search-x:hover { color: var(--tt-ink); background: rgba(245,237,224,0.06); }
+.search-pop { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50; list-style: none; margin: 0; padding: 5px; background: #1a110d; border: 1px solid var(--tt-rule-strong); border-radius: var(--r-md); box-shadow: var(--shadow-card); animation: tt-fade-up .16s var(--ease-out) both; max-height: 320px; overflow-y: auto; }
+.search-opt { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--r-sm); cursor: pointer; }
+.search-opt.is-active { background: rgba(217,119,87,0.12); }
+.search-opt-flag { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.search-opt-name { font-family: var(--f-sans); font-size: 13.5px; color: var(--tt-ink); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-opt-city { color: var(--tt-ink-muted); }
+.search-opt-score { font-family: var(--f-serif); font-style: italic; line-height: 1; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 
 /* Map area */

@@ -142,7 +142,7 @@ export function Inspire({ appState, setAppState, addTrip }: PageProps) {
               </div>
               <div className="hero-cta-row">
                 <button className="btn btn-primary" onClick={() => addTrip(hero.c.iso, monthIdx)}><IconBookmark size={14}/> Enregistrer</button>
-                <button className="btn btn-ghost" onClick={() => navigate('/')}>Voir sur la carte <IconArrow/></button>
+                <button className="btn btn-ghost" onClick={() => navigate(`/?pays=${hero.c.iso}&mois=${monthIdx}`)}>Voir sur la carte <IconArrow/></button>
               </div>
               <span className="hero-score-big">{hero.score}<sup>/100</sup></span>
             </div>
@@ -150,7 +150,11 @@ export function Inspire({ appState, setAppState, addTrip }: PageProps) {
 
           <div className="side-stack">
             {rest.map((r, i) => (
-              <article key={r.c.iso} className="side-card">
+              <article key={r.c.iso} className="side-card"
+                       role="button" tabIndex={0}
+                       onClick={() => navigate(`/?pays=${r.c.iso}&mois=${monthIdx}`)}
+                       onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/?pays=${r.c.iso}&mois=${monthIdx}`); }}
+                       title={`Voir ${r.c.name} sur la carte`}>
                 <div className="side-card-photo" style={{ background: photoGrad(r.c.iso) }}>
                   <span className="side-card-rank">{String(i + 2).padStart(2, '0')}</span>
                 </div>
