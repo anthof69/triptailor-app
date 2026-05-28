@@ -4,39 +4,11 @@ import { IconSearch, IconClose } from '../components/icons';
 import { WorldMap } from '../components/WorldMap';
 import { ClimatePanel } from '../components/ClimatePanel';
 import { AgentsPanel } from '../components/AgentsPanel';
-import { continents, countries as ALL, monthsFull } from '../data/countries';
+import { MonthPicker } from '../components/MonthPicker';
+import { continents, countries as ALL } from '../data/countries';
 import { scoreClass, scoreHex } from '../lib/utils';
 import type { PageProps } from '../App';
 
-function MonthPicker({ monthIdx, setMonthIdx }: { monthIdx: number; setMonthIdx: (i: number) => void }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
-  }, []);
-
-  return (
-    <span ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button className="month-pick" onClick={() => setOpen(o => !o)}>
-        {monthsFull[monthIdx]}
-        <span className="caret">▾</span>
-      </button>
-      {open && (
-        <div className="month-pop" role="listbox">
-          {monthsFull.map((m, i) => (
-            <button key={m} className={"month-opt " + (i === monthIdx ? 'is-on' : '')}
-                    onClick={() => { setMonthIdx(i); setOpen(false); }}>
-              <span className="t-mono">{String(i + 1).padStart(2, '0')}</span> {m}
-            </button>
-          ))}
-        </div>
-      )}
-    </span>
-  );
-}
 
 function SearchBox({ monthIdx, query, setQuery, onPick }: {
   monthIdx: number; query: string; setQuery: (q: string) => void; onPick: (iso: string) => void;

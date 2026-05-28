@@ -210,8 +210,55 @@
 .cp-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 18px 24px 0; }
 .cp-hl { padding: 16px 24px 0; }
 .cp-hl-txt { font-family: var(--f-serif); font-size: 18px; font-style: italic; color: var(--tt-ink-soft); line-height: 1.4; margin: 6px 0 0; letter-spacing: -0.005em; }
-.cp-ctas { display: flex; gap: 8px; padding: 22px 24px 28px; margin-top: auto; }
+.cp-detail-link { display: inline-flex; align-items: center; gap: 6px; margin: 18px 24px 0; padding: 10px 14px; border-radius: var(--r-md); background: rgba(245,237,224,0.03); border: 1px solid var(--tt-rule); color: var(--tt-ink-soft); text-decoration: none; font-size: 12.5px; transition: border-color .12s, color .12s, background .12s; }
+.cp-detail-link:hover { border-color: var(--tt-rule-hot); color: var(--tt-terra-soft); background: rgba(217,119,87,0.06); }
+.cp-ctas { display: flex; gap: 8px; padding: 16px 24px 28px; margin-top: auto; }
 .cp-cta-1 { flex: 1 1 auto; justify-content: center; }
+
+/* ────────────────────────────────────────────────────────────
+   PAYS · detail page (/pays/:iso)
+   ──────────────────────────────────────────────────────────── */
+.pays-404 { max-width: 480px; margin: 80px auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.pays { max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+.pays-hero { position: relative; border-radius: 0 0 var(--r-xl) var(--r-xl); min-height: 340px; margin: 0 -24px; padding: 22px 32px 28px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+.pays-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,9,7,0.30) 0%, transparent 35%, rgba(14,9,7,0.88) 100%); pointer-events: none; }
+.pays-hero > * { position: relative; z-index: 1; }
+.pays-hero-top { display: flex; align-items: center; justify-content: space-between; }
+.pays-back { display: inline-flex; align-items: center; gap: 6px; color: var(--tt-ink); text-decoration: none; font-size: 13px; padding: 7px 12px; border-radius: var(--r-pill); background: rgba(14,9,7,0.45); backdrop-filter: blur(8px); border: 1px solid rgba(245,237,224,0.12); }
+.pays-back:hover { background: rgba(14,9,7,0.65); }
+.pays-hero-iso { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.18em; color: rgba(245,237,224,0.85); background: rgba(14,9,7,0.45); padding: 5px 11px; border-radius: var(--r-xs); }
+.pays-hero-foot .t-eyebrow { color: rgba(245,237,224,0.82); }
+.pays-name { font-family: var(--f-serif); font-style: italic; font-size: clamp(40px, 6vw, 76px); line-height: 0.98; letter-spacing: -0.025em; margin: 6px 0 0; color: var(--tt-ink); }
+.pays-city { font-size: 17px; color: rgba(245,237,224,0.82); margin-top: 6px; }
+
+.pays-body { display: grid; grid-template-columns: 1fr 280px; gap: 40px; padding-top: 36px; align-items: start; }
+.pays-main { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.pays-score-row { display: flex; align-items: center; gap: 22px; }
+.pays-score-headline { font-family: var(--f-serif); font-style: italic; font-size: 30px; line-height: 1; margin-top: 6px; letter-spacing: -0.01em; }
+.pays-score-sub { color: var(--tt-ink-muted); font-size: 14px; margin-top: 6px; }
+.pays-score-sub .month-pick { font-size: 16px; }
+.pays-hl { font-family: var(--f-serif); font-style: italic; font-size: 24px; line-height: 1.35; color: var(--tt-ink-soft); letter-spacing: -0.008em; margin: 0; max-width: 40ch; }
+.pays-bars { padding: 18px 0; border-top: 1px solid var(--tt-rule); border-bottom: 1px solid var(--tt-rule); }
+.pays-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pays-stats .cp-stat-u { display: block; margin: 4px 0 0; }
+.pays-agents { display: flex; flex-direction: column; gap: 14px; }
+.pays-agent-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pays-agent { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r-md); background: rgba(245,237,224,0.02); border: 1px solid var(--tt-rule); }
+.pays-agent-dot { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; color: #1a0905; }
+.pays-agent-name { font-size: 13px; font-weight: 500; color: var(--tt-ink); }
+.pays-agent-txt { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--tt-ink-soft); }
+.pays-synth { padding: 16px 18px; border-radius: var(--r-md); background: linear-gradient(180deg, rgba(217,119,87,0.08), rgba(217,119,87,0.02)); border: 1px solid var(--tt-rule-hot); }
+.pays-actions { position: sticky; top: 78px; display: flex; flex-direction: column; gap: 8px; }
+.pays-actions .btn { width: 100%; justify-content: center; }
+
+@media (max-width: 768px) {
+  .pays { padding: 0 16px 32px; }
+  .pays-hero { margin: 0 -16px; min-height: 260px; padding: 16px 18px 20px; }
+  .pays-body { grid-template-columns: 1fr; gap: 24px; padding-top: 24px; }
+  .pays-agent-list { grid-template-columns: 1fr; }
+  .pays-actions { position: static; }
+  .pays-hl { font-size: 20px; }
+}
 
 /* ── Agents panel ── */
 .agents-panel {

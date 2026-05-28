@@ -1,4 +1,5 @@
-import { IconClose, IconBookmark, IconCompare } from './icons';
+import { Link } from 'react-router-dom';
+import { IconClose, IconBookmark, IconCompare, IconArrow } from './icons';
 import { ScoreRing, MiniBars } from './atoms';
 import { months, monthsFull, type Country } from '../data/countries';
 import { budgetSym, scoreHex, scoreLabel, tagLabel } from '../lib/utils';
@@ -81,6 +82,10 @@ export function ClimatePanel({ country, monthIdx, saved, onClose, onAddTrip, onC
         <div className="t-eyebrow">À voir</div>
         <p className="cp-hl-txt"><i>{country.hi}</i></p>
       </div>
+
+      <Link className="cp-detail-link" to={`/pays/${country.iso}`}>
+        Page complète, agents &amp; partage <IconArrow size={13}/>
+      </Link>
 
       <div className="cp-ctas">
         <button className="btn btn-primary cp-cta-1" onClick={() => onAddTrip(country.iso)}>

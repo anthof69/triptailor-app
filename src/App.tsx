@@ -7,6 +7,7 @@ import { Explorer } from './pages/Explorer';
 import { Inspire } from './pages/Inspire';
 import { Voyages } from './pages/Voyages';
 import { Comparer } from './pages/Comparer';
+import { Pays } from './pages/Pays';
 import { useAuth } from './lib/useAuth';
 import { useSavedTrips, type SavedTrip } from './lib/useSavedTrips';
 
@@ -83,6 +84,7 @@ export default function App() {
             <Route path="/inspire"  element={<Inspire  {...pageProps}/>}/>
             <Route path="/voyages"  element={<Voyages  {...pageProps}/>}/>
             <Route path="/comparer" element={<Comparer {...pageProps}/>}/>
+            <Route path="/pays/:iso" element={<Pays {...pageProps}/>}/>
           </Routes>
         </div>
         <AuthModal

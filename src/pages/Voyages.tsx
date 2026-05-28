@@ -43,7 +43,7 @@ function TripCard({ entry, country, onCompare, onRemove }: { entry: TripEntry; c
       </div>
       <div className="trip-foot">
         <span className="trip-added">Ajouté {entry.added}</span>
-        <Link to="/" className="icon-btn" title="Voir sur la carte"><IconMap/></Link>
+        <Link to={`/pays/${country.iso}`} className="icon-btn" title="Voir le détail"><IconMap/></Link>
         <button className="icon-btn" title="Comparer" onClick={() => onCompare(country.iso)}><IconCompare/></button>
         <button className="icon-btn" title="Retirer" onClick={() => onRemove(country.iso)}><IconTrash/></button>
       </div>
@@ -55,7 +55,7 @@ function TripRow({ entry, country, onCompare, onRemove }: { entry: TripEntry; co
   const score = country.scores[entry.month];
   return (
     <article className="trip-row">
-      <Link to="/" className="trip-row-photo" style={{ background: photoGrad(country.iso) }} aria-label={`Voir ${country.name}`}>
+      <Link to={`/pays/${country.iso}`} className="trip-row-photo" style={{ background: photoGrad(country.iso) }} aria-label={`Voir ${country.name}`}>
         <span className="trip-row-iso">{country.iso}</span>
       </Link>
       <div className="trip-row-body">

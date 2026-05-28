@@ -54,7 +54,7 @@ export function Comparer({ appState, setAppState, addTrip }: PageProps) {
               <button className="cmp-remove" onClick={() => remove(c.iso)} aria-label={`Retirer ${c.name}`}><IconClose/></button>
               <span className="cmp-iso">{c.iso}</span>
               <div>
-                <h3 className="cmp-name">{c.name}</h3>
+                <h3 className="cmp-name"><Link to={`/pays/${c.iso}`} style={{ color: 'inherit', textDecoration: 'none' }}>{c.name}</Link></h3>
                 <div className="cmp-city">{c.city}</div>
               </div>
             </div>

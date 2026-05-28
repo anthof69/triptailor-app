@@ -1,21 +1,7 @@
 import { useEffect, useState } from 'react';
 import { IconClose } from './icons';
 import { agents as AGENTS, monthsFull, type Country } from '../data/countries';
-import { budgetEst, budgetSym } from '../lib/utils';
-
-const AGENT_MSGS: Record<string, (c: Country, m: number) => string> = {
-  meteo: (c, m) =>
-    `${c.tempLo}–${c.tempHi}°C, ${c.rainDays} j de pluie en moyenne. La fenêtre `
-    + `${monthsFull[m].toLowerCase()} est ${c.scores[m] >= 80 ? 'particulièrement clémente' : 'à arbitrer selon vos priorités'}.`,
-  budget: (c) =>
-    `${budgetSym(c.budget)} par jour — vol compris, comptez environ ${budgetEst(c.budget)}/jour pour un voyageur seul confort moyen.`,
-  safety: (c) => {
-    const low = c.cont === 'eu' || ['JP','CA','AU','NZ','SG','IS','NO','SE'].includes(c.iso);
-    return `Destination ${low ? 'à risque faible' : 'à risque modéré'}. Vigilance habituelle dans les zones touristiques et transports.`;
-  },
-  plan: (c) =>
-    `Suggestion : 7–10 jours pour un premier voyage, en combinant ${c.hi.split(',')[0].toLowerCase()} et une 2ᵉ étape proche.`,
-};
+import { AGENT_MSGS, askClaude } from '../lib/agents';
 
 interface Props {
   country: Country | null;
@@ -63,24 +49,7 @@ export function AgentsPanel({ country, monthIdx, open, onClose }: Props) {
   const ask = async () => {
     if (!country) return;
     setPending(true);
-    const prompt = `Donne ton verdict pour ${country.name} (${country.city}) en ${monthsFull[monthIdx].toLowerCase()}, sachant : score climat ${country.scores[monthIdx]}/100, ${country.tempLo}-${country.tempHi}°C, budget ${budgetSym(country.budget)}, à voir : ${country.hi}.`;
-    let text: string | undefined;
-    try {
-      const r = await fetch('/api/claude', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
-      if (r.ok) {
-        const j = (await r.json()) as { text?: string };
-        text = j.text;
-      }
-    } catch (e) {
-      console.warn('[AgentsPanel] /api/claude unreachable', e);
-    }
-    if (!text) {
-      text = `Pour ${country.name} en ${monthsFull[monthIdx].toLowerCase()} : la fenêtre climatique est ${country.scores[monthIdx] >= 80 ? 'optimale' : 'acceptable'}, le budget cohérent, et la sécurité standard. Recommandation : ${country.scores[monthIdx] >= 75 ? 'partez sans hésiter — combinez ' + country.hi.split(',')[0] : 'envisagez une fenêtre alternative'}.`;
-    }
+    const text = await askClaude(country, monthIdx);
     setFeed(f => [...f, {
       agent: { id: 'claude', name: 'Synthèse', color: '#d97757', icon: '✦' },
       text, t: Date.now(), big: true,
